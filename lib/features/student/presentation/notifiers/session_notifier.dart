@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:lexiadapt/core/services/audio_recorder_service.dart';
 import 'package:lexiadapt/features/student/domain/entities/learner_profile.dart';
 import 'package:lexiadapt/features/student/domain/entities/reading_result.dart';
 import 'package:lexiadapt/features/student/domain/entities/story.dart';
@@ -7,7 +8,7 @@ import 'package:lexiadapt/features/student/domain/services/speech_recognition_se
 import 'package:lexiadapt/features/student/domain/services/difficulty_service.dart';
 import 'package:lexiadapt/features/student/domain/services/story_generator_service.dart';
 import 'package:lexiadapt/features/student/domain/repositories/learner_repository.dart';
-import 'package:lexiadapt/features/student/data/services/mock_speech_recognition_service.dart';
+import 'package:lexiadapt/features/student/data/services/whisper_speech_recognition_service.dart';
 
 enum SessionState { idle, recording, evaluating, results }
 
@@ -17,6 +18,7 @@ class SessionNotifier extends ChangeNotifier {
   final StoryGeneratorService storyService;
   final LearnerRepository repository;
   final LearnerHMM hmm;
+  final AudioRecorderService audioRecorder;
   LearnerProfile profile;
 
   Story? currentStory;
@@ -24,6 +26,9 @@ class SessionNotifier extends ChangeNotifier {
   ReadingResult? lastResult;
   SessionState state = SessionState.idle;
   StoryCategory? _currentCategory;
+  DateTime? _recordingStartTime;
+
+  Stream<double> get amplitudeStream => audioRecorder.amplitudeStream;
 
   SessionNotifier({
     required this.speechService,
@@ -31,6 +36,7 @@ class SessionNotifier extends ChangeNotifier {
     required this.storyService,
     required this.repository,
     required this.hmm,
+    required this.audioRecorder,
     required this.profile,
   });
 
@@ -38,10 +44,6 @@ class SessionNotifier extends ChangeNotifier {
     _currentCategory = category;
     final wordStates = await repository.getWordStates(profile.id);
     hmm.importWordStates(wordStates);
-
-    if (speechService case final MockSpeechRecognitionService mock) {
-      mock.difficultyHint = profile.currentDifficulty;
-    }
 
     currentStory = await storyService.generateStory(
       category: category,
@@ -53,29 +55,37 @@ class SessionNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  void startRecording() {
-    state = SessionState.recording;
+  Future<void> startRecording() async {
+    final started = await audioRecorder.startRecording();
+    if (started) {
+      _recordingStartTime = DateTime.now();
+      state = SessionState.recording;
+      debugPrint('[Session] Recording started — read the story aloud, tap mic to stop');
+    } else {
+      debugPrint('[Session] Could not start recording');
+    }
     notifyListeners();
-
-    Future.delayed(const Duration(seconds: 3), () {
-      if (state == SessionState.recording) {
-        stopRecordingAndEvaluate();
-      }
-    });
   }
 
   Future<void> stopRecordingAndEvaluate() async {
     if (currentStory == null) return;
 
+    final audioPath = await audioRecorder.stopRecording();
+    debugPrint('[Session] Audio saved: $audioPath');
+
     state = SessionState.evaluating;
     notifyListeners();
 
-    if (speechService case final MockSpeechRecognitionService mock) {
-      mock.difficultyHint = profile.currentDifficulty;
+    // Pass audio path and timing to Whisper
+    if (speechService case final WhisperSpeechRecognitionService whisper) {
+      whisper.setAudioPath(audioPath);
+      whisper.setRecordingStartTime(_recordingStartTime);
     }
 
-    final result =
-        await speechService.evaluateReading(currentStory!.text);
+    final result = await speechService.evaluateReading(currentStory!.text);
+
+    debugPrint('[Session] Result: accuracy=${result.accuracy}, wpm=${result.wpm}, '
+        'spoken="${result.spokenText}", troubles=${result.troubleWords.length}');
 
     for (final word in currentStory!.text.split(RegExp(r'\s+'))) {
       final clean = word.replaceAll(RegExp(r'[^\w]'), '').toLowerCase();

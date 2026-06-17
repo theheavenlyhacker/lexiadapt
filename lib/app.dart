@@ -24,6 +24,7 @@ class LexiAdaptApp extends StatelessWidget {
             storyService: services.storyService,
             repository: services.repository,
             hmm: services.hmm,
+            audioRecorder: services.audioRecorder,
             profile: LearnerProfile(id: 'default', name: 'Student'),
           ),
           update: (ctx, profile, session) {

@@ -7,6 +7,7 @@ import 'package:lexiadapt/features/student/screens/category_screen.dart';
 import 'package:lexiadapt/features/student/screens/student_progress_screen.dart';
 import 'package:lexiadapt/features/student/screens/student_rewards_screen.dart';
 import 'package:lexiadapt/features/student/screens/student_settings_screen.dart';
+import 'package:lexiadapt/features/student/screens/record_debug_screen.dart';
 import 'package:lexiadapt/features/student/widgets/home_button.dart';
 
 class StudentHomeScreen extends StatelessWidget {
@@ -64,6 +65,16 @@ class StudentHomeScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (_) => const StudentSettingsScreen())),
+                ),
+                const SizedBox(height: 12),
+                HomeButton(
+                  label: 'Debug Recording',
+                  icon: Icons.bug_report,
+                  colors: const [Color(0xFFEF5350), Color(0xFFC62828)],
+                  onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const RecordDebugScreen())),
                 ),
                 const Spacer(),
               ],

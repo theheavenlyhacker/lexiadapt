@@ -10,6 +10,7 @@ import 'package:lexiadapt/features/student/data/services/mock_speech_recognition
 import 'package:lexiadapt/features/student/data/services/mock_difficulty_service.dart';
 import 'package:lexiadapt/features/student/data/services/template_story_generator_service.dart';
 import 'package:lexiadapt/features/student/domain/learner_hmm.dart';
+import 'package:lexiadapt/core/services/audio_recorder_service.dart';
 import 'package:lexiadapt/features/auth/screens/role_selection_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -29,6 +30,7 @@ void main() {
               storyService: TemplateStoryGeneratorService(),
               repository: mockRepo,
               hmm: hmm,
+              audioRecorder: AudioRecorderService(),
               profile: LearnerProfile(id: 'test', name: 'Test'),
             ),
           ),
