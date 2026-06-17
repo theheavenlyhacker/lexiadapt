@@ -10,7 +10,8 @@
       "Bash(flutter run *)",
       "Bash(flutter build *)",
       "Bash(rtk ping *)",
-      "Bash(rtk read *)"
+      "Bash(rtk read *)",
+      "Bash(rtk wc *)"
     ]
   }
 }

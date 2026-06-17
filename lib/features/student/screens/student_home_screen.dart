@@ -24,7 +24,7 @@ class StudentHomeScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 const TopBar(),
                 const SizedBox(height: 24),
-                const LexiAdaptLogo(fontSize: 36),
+                const LexiAdaptLogo(height: 48),
                 const SizedBox(height: 40),
                 HomeButton(
                   label: 'Continue Reading',

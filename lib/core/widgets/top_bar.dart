@@ -28,7 +28,7 @@ class TopBar extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.language, size: 18, color: Colors.grey[700]),
+              Image.asset('assets/images/globe.png', width: 20, height: 20),
               const SizedBox(width: 4),
               Text('EN',
                   style: TextStyle(

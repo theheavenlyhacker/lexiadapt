@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:lexiadapt/core/theme/app_colors.dart';
+import 'package:lexiadapt/features/student/domain/entities/story.dart';
+import 'package:lexiadapt/features/student/presentation/notifiers/session_notifier.dart';
 import 'package:lexiadapt/features/student/screens/reading_session_screen.dart';
 
 class CategoryScreen extends StatelessWidget {
   const CategoryScreen({super.key});
 
   static const _categories = [
-    {'name': 'Animals', 'icon': Icons.pets, 'color': 0xFFFF8A65},
-    {'name': 'Favorites', 'icon': Icons.favorite, 'color': 0xFFEF5350},
-    {'name': 'Family', 'icon': Icons.family_restroom, 'color': 0xFF42A5F5},
+    {'name': 'Animals', 'asset': 'assets/images/cat_animals.png', 'color': 0xFFFF8A65},
+    {'name': 'Favorites', 'asset': 'assets/images/cat_favorites.png', 'color': 0xFFEF5350},
+    {'name': 'Fantasy', 'asset': 'assets/images/cat_fantasy.png', 'color': 0xFF42A5F5},
     {'name': 'Nature', 'icon': Icons.eco, 'color': 0xFF66BB6A},
-    {'name': 'Learning', 'icon': Icons.lightbulb, 'color': 0xFFFFCA28},
-    {'name': 'History', 'icon': Icons.history_edu, 'color': 0xFF8D6E63},
+    {'name': 'Learning', 'asset': 'assets/images/cat_learning.png', 'color': 0xFFFFCA28},
+    {'name': 'Adventure', 'asset': 'assets/images/cat_adventure.png', 'color': 0xFF8D6E63},
   ];
 
   @override
@@ -52,16 +55,28 @@ class CategoryScreen extends StatelessWidget {
                   crossAxisCount: 2,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 1.05,
+                  childAspectRatio: 1.0,
                 ),
                 itemBuilder: (context, i) {
                   final cat = _categories[i];
                   final c = Color(cat['color'] as int);
+                  final hasAsset = cat.containsKey('asset');
+                  final categories = StoryCategory.values;
+                  final storyCategory = i < categories.length ? categories[i] : StoryCategory.animals;
                   return GestureDetector(
-                    onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const ReadingSessionScreen())),
+                    onTap: () async {
+                      try {
+                        await context.read<SessionNotifier>().startSession(storyCategory);
+                        if (context.mounted) {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const ReadingSessionScreen()));
+                        }
+                      } catch (e) {
+                        debugPrint('Session start error: $e');
+                        if (context.mounted) {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const ReadingSessionScreen()));
+                        }
+                      }
+                    },
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -76,16 +91,28 @@ class CategoryScreen extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Color.fromRGBO(c.r.toInt(),
-                                  c.g.toInt(), c.b.toInt(), 0.15),
-                              shape: BoxShape.circle,
+                          if (hasAsset)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.asset(
+                                cat['asset'] as String,
+                                width: 70,
+                                height: 70,
+                                fit: BoxFit.contain,
+                                cacheWidth: 140,
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Color.fromRGBO(c.r.toInt(),
+                                    c.g.toInt(), c.b.toInt(), 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(cat['icon'] as IconData,
+                                  color: c, size: 34),
                             ),
-                            child: Icon(cat['icon'] as IconData,
-                                color: c, size: 34),
-                          ),
                           const SizedBox(height: 10),
                           Text(cat['name'] as String,
                               style: const TextStyle(

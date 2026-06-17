@@ -1,12 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:lexiadapt/core/theme/app_colors.dart';
 import 'package:lexiadapt/core/painters/area_chart_painter.dart';
+import 'package:lexiadapt/features/student/presentation/notifiers/profile_notifier.dart';
+import 'package:lexiadapt/features/student/presentation/notifiers/progress_notifier.dart';
 
-class StudentProgressScreen extends StatelessWidget {
+class StudentProgressScreen extends StatefulWidget {
   const StudentProgressScreen({super.key});
 
   @override
+  State<StudentProgressScreen> createState() => _StudentProgressScreenState();
+}
+
+class _StudentProgressScreenState extends State<StudentProgressScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final profile = context.read<ProfileNotifier>().profile;
+    if (profile != null) {
+      context.read<ProgressNotifier>().load(profile.id);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final profile = context.watch<ProfileNotifier>().profile;
+    final progress = context.watch<ProgressNotifier>();
+    final pct = ((profile?.overallAccuracy ?? 0.5) * 100).round();
+    final level = profile?.level ?? 1;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
@@ -47,8 +69,8 @@ class StudentProgressScreen extends StatelessWidget {
                           color: const Color(0x2666BB6A),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Text('87%',
-                            style: TextStyle(
+                        child: Text('$pct%',
+                            style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.successDark)),
@@ -61,7 +83,9 @@ class StudentProgressScreen extends StatelessWidget {
                     child: CustomPaint(
                       size: const Size(double.infinity, 120),
                       painter: AreaChartPainter(
-                        data: [0.6, 0.65, 0.7, 0.68, 0.75, 0.8, 0.82, 0.87],
+                        data: progress.accuracyHistory.isEmpty
+                            ? [0.5]
+                            : progress.accuracyHistory,
                         color: AppColors.primaryBlue,
                       ),
                     ),
@@ -81,16 +105,29 @@ class StudentProgressScreen extends StatelessWidget {
                   Row(
                     children: [
                       ...List.generate(
-                          3,
-                          (_) => const Icon(Icons.star_rounded,
-                              color: AppColors.warning, size: 32)),
+                          level,
+                          (_) => Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: Image.asset(
+                                    'assets/images/star_cute.png',
+                                    width: 32,
+                                    height: 32),
+                              )),
                       ...List.generate(
-                          2,
-                          (_) => Icon(Icons.star_rounded,
-                              color: Colors.grey[300], size: 32)),
+                          (5 - level).clamp(0, 5),
+                          (_) => Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: Opacity(
+                                  opacity: 0.25,
+                                  child: Image.asset(
+                                      'assets/images/star_cute.png',
+                                      width: 32,
+                                      height: 32),
+                                ),
+                              )),
                       const Spacer(),
-                      const Text('Level 3',
-                          style: TextStyle(
+                      Text('Level $level',
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: AppColors.warning)),
@@ -108,13 +145,17 @@ class StudentProgressScreen extends StatelessWidget {
                       style: TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 16),
-                  _skillBar('Phonics', 0.92, AppColors.success),
+                  _skillBar('Phonics',
+                      progress.skillScores['phonics'] ?? 0.5, AppColors.success),
                   const SizedBox(height: 12),
-                  _skillBar('Vocabulary', 0.78, AppColors.primaryBlue),
+                  _skillBar('Vocabulary',
+                      progress.skillScores['vocabulary'] ?? 0.5, AppColors.primaryBlue),
                   const SizedBox(height: 12),
-                  _skillBar('Comprehension', 0.85, AppColors.purple),
+                  _skillBar('Comprehension',
+                      progress.skillScores['comprehension'] ?? 0.5, AppColors.purple),
                   const SizedBox(height: 12),
-                  _skillBar('Fluency', 0.70, AppColors.orange),
+                  _skillBar('Fluency',
+                      progress.skillScores['fluency'] ?? 0.5, AppColors.orange),
                 ],
               ),
             ),

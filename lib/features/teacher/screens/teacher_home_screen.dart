@@ -21,7 +21,7 @@ class TeacherHomeScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 const TopBar(),
                 const SizedBox(height: 24),
-                const LexiAdaptLogo(fontSize: 36),
+                const LexiAdaptLogo(height: 48),
                 const SizedBox(height: 40),
                 _NavButton(
                   title: 'Class Overview',

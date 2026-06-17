@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:lexiadapt/core/theme/app_colors.dart';
 import 'package:lexiadapt/core/widgets/nature_background.dart';
 import 'package:lexiadapt/core/widgets/lexiadapt_logo.dart';
 import 'package:lexiadapt/core/widgets/top_bar.dart';
+import 'package:lexiadapt/features/student/presentation/notifiers/profile_notifier.dart';
 import 'package:lexiadapt/features/student/screens/student_home_screen.dart';
 import 'package:lexiadapt/features/teacher/screens/teacher_home_screen.dart';
 
@@ -16,6 +18,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = false;
+  final _usernameController = TextEditingController(text: 'Juan');
   bool _obscurePassword = true;
 
   @override
@@ -30,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 8),
                 const TopBar(),
                 const SizedBox(height: 16),
-                const LexiAdaptLogo(fontSize: 38),
+                const LexiAdaptLogo(height: 52),
                 const SizedBox(height: 24),
                 const Text('Welcome!',
                     style: TextStyle(
@@ -45,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildTextField(
                   icon: Icons.person_outline,
                   hint: 'Username',
+                  controller: _usernameController,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
@@ -131,6 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required String hint,
     bool obscure = false,
     Widget? suffixIcon,
+    TextEditingController? controller,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -139,6 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
         border: Border.all(color: const Color(0x8080CBC4)),
       ),
       child: TextField(
+        controller: controller,
         obscureText: obscure,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: AppColors.teal, size: 22),
@@ -154,7 +160,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildLoginButton() {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
+        final name = _usernameController.text.trim();
+        if (name.isEmpty) return;
+        final id = name.toLowerCase().replaceAll(' ', '_');
+        await context.read<ProfileNotifier>().loadOrCreate(id, name);
+        if (!mounted) return;
         final destination = widget.role == 'student'
             ? const StudentHomeScreen()
             : const TeacherHomeScreen();

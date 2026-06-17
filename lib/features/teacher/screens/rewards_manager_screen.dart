@@ -44,8 +44,8 @@ class RewardsManagerScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.star_rounded,
-                      color: Color(0xFFFFB300), size: 44),
+                  Image.asset('assets/images/star_cute.png',
+                      width: 50, height: 50),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(

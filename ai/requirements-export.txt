@@ -1,0 +1,8 @@
+# TFLite export dependencies — requires Python 3.11 or 3.12
+# Only needed for the final model export step.
+# Use a separate venv: python3.12 -m venv ai/venv-export
+tensorflow>=2.15.0
+onnx>=1.15.0
+onnxruntime>=1.16.0
+onnx-tf>=1.10.0
+optimum>=1.16.0

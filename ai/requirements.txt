@@ -1,0 +1,44 @@
+# LexiAdapt AI Dependencies (English-first)
+# Install: pip install -r ai/requirements.txt
+#
+# Note: TensorFlow is NOT included here because it doesn't support Python 3.14 yet.
+# TF is only needed for the final TFLite export step. Use requirements-export.txt
+# when you're ready to export, on a Python 3.11/3.12 environment.
+
+# Core ML
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Whisper Speech Recognition
+openai-whisper>=20231117
+transformers>=4.36.0
+datasets>=2.16.0
+accelerate>=0.25.0
+
+# Reinforcement Learning
+stable-baselines3>=2.2.0
+gymnasium>=0.29.0
+
+# Model Export (ONNX — works without TF)
+onnx>=1.15.0
+onnxruntime>=1.16.0
+
+# Audio Processing
+librosa>=0.10.0
+soundfile>=0.12.0
+
+# NLP & Phonemes
+phonemizer>=3.2.0
+jiwer>=3.0.0
+
+# Data Processing
+pandas>=2.1.0
+numpy>=1.24.0
+
+# Federated Learning
+flwr>=1.7.0
+
+# FL Server
+fastapi>=0.109.0
+uvicorn>=0.27.0

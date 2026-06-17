@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:lexiadapt/core/theme/app_colors.dart';
+import 'package:lexiadapt/features/student/domain/entities/achievement.dart';
+import 'package:lexiadapt/features/student/presentation/notifiers/profile_notifier.dart';
 
 class StudentRewardsScreen extends StatelessWidget {
   const StudentRewardsScreen({super.key});
@@ -23,76 +26,60 @@ class StudentRewardsScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: AppColors.textDark)),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            const Text('My Badges',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+      body: FutureBuilder<List<Achievement>>(
+        future: context.read<ProfileNotifier>().getAchievements(),
+        builder: (context, snapshot) {
+          final achievements =
+              snapshot.data ?? Achievement.allAchievements();
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _badge(Icons.star_rounded, AppColors.warning, 'Gold Star'),
-                _badge(Icons.emoji_events, const Color(0xFF78909C), 'Silver'),
-                _badge(Icons.workspace_premium, AppColors.error, 'Bronze'),
-                _badge(Icons.auto_awesome, AppColors.primaryBlue, 'Streak'),
+                const SizedBox(height: 8),
+                const Text('My Badges',
+                    style: TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _imageBadge(
+                        'assets/images/star_cute.png', 'Gold Star'),
+                    _imageBadge(
+                        'assets/images/coin_trophy.png', 'Champion'),
+                    _imageBadge('assets/images/fire.png', 'Streak'),
+                    _imageBadge('assets/images/strong.png', 'Strong'),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                const Text('Achievements',
+                    style: TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 14),
+                ...achievements.map((a) => _achievementTile(a)),
+                const SizedBox(height: 24),
               ],
             ),
-            const SizedBox(height: 24),
-            const Text('Achievements',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 14),
-            _achievementTile(
-                Icons.menu_book, AppColors.primaryBlue, 'Bookworm',
-                'Read 10 stories', true),
-            _achievementTile(
-                Icons.mic, AppColors.success, 'Voice Star',
-                'Complete 5 read-aloud sessions', true),
-            _achievementTile(
-                Icons.trending_up, AppColors.purple, 'Rising Reader',
-                'Improve accuracy by 10%', true),
-            _achievementTile(
-                Icons.local_fire_department, AppColors.error, '7-Day Streak',
-                'Read every day for a week', false),
-            _achievementTile(
-                Icons.diamond, AppColors.warning, 'Perfect Score',
-                'Get 100% accuracy on a story', false),
-            const SizedBox(height: 24),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _badge(IconData icon, Color color, String label) {
+  Widget _imageBadge(String asset, String label) {
     return Column(
       children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: Color.fromRGBO(
-                color.r.toInt(), color.g.toInt(), color.b.toInt(), 0.15),
-            shape: BoxShape.circle,
-            border: Border.all(
-                color: Color.fromRGBO(
-                    color.r.toInt(), color.g.toInt(), color.b.toInt(), 0.4),
-                width: 2),
-          ),
-          child: Icon(icon, color: color, size: 28),
-        ),
+        Image.asset(asset, width: 60, height: 60, fit: BoxFit.contain),
         const SizedBox(height: 6),
         Text(label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500)),
+            style: const TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w500)),
       ],
     );
   }
 
-  Widget _achievementTile(
-      IconData icon, Color color, String title, String subtitle, bool done) {
+  Widget _achievementTile(Achievement a) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -111,29 +98,32 @@ class StudentRewardsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Color.fromRGBO(
-                  color.r.toInt(), color.g.toInt(), color.b.toInt(), 0.12),
+              color: Color.fromRGBO(a.color.r.toInt(), a.color.g.toInt(),
+                  a.color.b.toInt(), 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(a.icon, color: a.color, size: 24),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
+                Text(a.title,
                     style: const TextStyle(
                         fontSize: 15, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
-                Text(subtitle,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                Text(a.description,
+                    style:
+                        TextStyle(fontSize: 12, color: Colors.grey[500])),
               ],
             ),
           ),
           Icon(
-            done ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: done ? AppColors.success : Colors.grey[300],
+            a.isEarned
+                ? Icons.check_circle
+                : Icons.radio_button_unchecked,
+            color: a.isEarned ? AppColors.success : Colors.grey[300],
             size: 24,
           ),
         ],
