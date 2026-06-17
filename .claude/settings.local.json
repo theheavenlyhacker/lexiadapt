@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(flutter --version)"
+      "Bash(flutter --version)",
+      "Bash(rtk ls *)",
+      "Bash(rtk find *)",
+      "Bash(flutter analyze *)",
+      "Bash(rtk grep *)",
+      "Bash(flutter test *)",
+      "Bash(flutter run *)",
+      "Bash(flutter build *)",
+      "Bash(rtk ping *)",
+      "Bash(rtk read *)"
     ]
   }
 }
