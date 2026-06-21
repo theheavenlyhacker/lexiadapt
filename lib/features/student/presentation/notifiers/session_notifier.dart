@@ -137,14 +137,21 @@ class SessionNotifier extends ChangeNotifier {
     if (!earned.contains('bookworm') && profile.totalSessions >= 10) {
       await repository.unlockAchievement(profile.id, 'bookworm');
     }
-    if (!earned.contains('perfect') && result.accuracy >= 1.0) {
+    if (!earned.contains('rising_reader') && profile.overallAccuracy >= 0.85) {
+      await repository.unlockAchievement(profile.id, 'rising_reader');
+    }
+    final wordStates = hmm.exportWordStates();
+    final masteredWords = wordStates.values
+        .where((s) => s[2] > 0.6)
+        .length;
+    if (!earned.contains('perfect') && masteredWords >= 50) {
       await repository.unlockAchievement(profile.id, 'perfect');
+    }
+    if (!earned.contains('story_master') && profile.totalSessions >= 20) {
+      await repository.unlockAchievement(profile.id, 'story_master');
     }
     if (!earned.contains('streak_7') && profile.dayStreak >= 7) {
       await repository.unlockAchievement(profile.id, 'streak_7');
-    }
-    if (!earned.contains('rising_reader') && profile.overallAccuracy >= 0.7) {
-      await repository.unlockAchievement(profile.id, 'rising_reader');
     }
   }
 }

@@ -20,9 +20,8 @@ class RoleSelectionScreen extends StatelessWidget {
               children: [
                 const SizedBox(height: 8),
                 const TopBar(),
-                const SizedBox(height: 20),
-                const LexiAdaptLogo(),
-                const SizedBox(height: 28),
+                const SizedBox(height: 4),
+                const LexiAdaptLogo(widthFraction: 0.75),
                 const Text('Welcome!',
                     style: TextStyle(
                         fontSize: 26,
@@ -31,7 +30,7 @@ class RoleSelectionScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text("Choose how you'll use LexiAdapt.",
                     style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-                const SizedBox(height: 28),
+                const SizedBox(height: 20),
                 RoleCard(
                   title: "I'm a Student",
                   description:

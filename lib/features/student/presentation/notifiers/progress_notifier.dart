@@ -8,10 +8,10 @@ class ProgressNotifier extends ChangeNotifier {
 
   List<double> accuracyHistory = [];
   Map<String, double> skillScores = {
-    'phonics': 0.5,
-    'vocabulary': 0.5,
-    'comprehension': 0.5,
-    'fluency': 0.5,
+    'phonics': 0.0,
+    'vocabulary': 0.0,
+    'comprehension': 0.0,
+    'fluency': 0.0,
   };
 
   ProgressNotifier(this._repository, this._hmm);
@@ -23,7 +23,7 @@ class ProgressNotifier extends ChangeNotifier {
         .toList();
 
     if (accuracyHistory.isEmpty) {
-      accuracyHistory = [0.5];
+      accuracyHistory = [0.0];
     }
 
     final wordStates = await _repository.getWordStates(learnerId);

@@ -49,7 +49,27 @@ void main() {
 
 class _InMemoryRepo implements LearnerRepository {
   final Map<String, LearnerProfile> _profiles = {};
+  final Map<String, Map<String, dynamic>> _accounts = {};
 
+  @override
+  Future<bool> createAccount(String username, String displayName, String passwordHash, String role) async {
+    if (_accounts.containsKey(username.toLowerCase())) return false;
+    final id = username.toLowerCase().replaceAll(' ', '_');
+    _accounts[username.toLowerCase()] = {
+      'id': id, 'username': username.toLowerCase(),
+      'display_name': displayName, 'password_hash': passwordHash, 'role': role,
+    };
+    return true;
+  }
+  @override
+  Future<Map<String, dynamic>?> authenticate(String username, String passwordHash) async {
+    final account = _accounts[username.toLowerCase()];
+    if (account != null && account['password_hash'] == passwordHash) return account;
+    return null;
+  }
+  @override
+  Future<bool> usernameExists(String username) async =>
+      _accounts.containsKey(username.toLowerCase());
   @override
   Future<LearnerProfile?> getProfile(String id) async => _profiles[id];
   @override

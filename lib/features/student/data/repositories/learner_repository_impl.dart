@@ -12,6 +12,45 @@ class LearnerRepositoryImpl implements LearnerRepository {
   LearnerRepositoryImpl(this._db);
 
   @override
+  Future<bool> createAccount(
+      String username, String displayName, String passwordHash, String role) async {
+    final db = await _db.database;
+    try {
+      final id = username.toLowerCase().replaceAll(' ', '_');
+      await db.insert(DbTables.userAccount, {
+        'id': id,
+        'username': username.toLowerCase(),
+        'display_name': displayName,
+        'password_hash': passwordHash,
+        'role': role,
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+      });
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>?> authenticate(
+      String username, String passwordHash) async {
+    final db = await _db.database;
+    final rows = await db.query(DbTables.userAccount,
+        where: 'username = ? AND password_hash = ?',
+        whereArgs: [username.toLowerCase(), passwordHash]);
+    if (rows.isEmpty) return null;
+    return rows.first;
+  }
+
+  @override
+  Future<bool> usernameExists(String username) async {
+    final db = await _db.database;
+    final rows = await db.query(DbTables.userAccount,
+        where: 'username = ?', whereArgs: [username.toLowerCase()]);
+    return rows.isNotEmpty;
+  }
+
+  @override
   Future<LearnerProfile?> getProfile(String id) async {
     final db = await _db.database;
     final rows =

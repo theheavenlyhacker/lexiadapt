@@ -12,12 +12,24 @@ class StudentProgressScreen extends StatefulWidget {
   State<StudentProgressScreen> createState() => _StudentProgressScreenState();
 }
 
-class _StudentProgressScreenState extends State<StudentProgressScreen> {
+class _StudentProgressScreenState extends State<StudentProgressScreen>
+    with RouteAware {
   @override
   void initState() {
     super.initState();
+    _loadProgress();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadProgress();
+  }
+
+  void _loadProgress() {
     final profile = context.read<ProfileNotifier>().profile;
     if (profile != null) {
+      context.read<ProfileNotifier>().refresh();
       context.read<ProgressNotifier>().load(profile.id);
     }
   }
@@ -26,7 +38,7 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
   Widget build(BuildContext context) {
     final profile = context.watch<ProfileNotifier>().profile;
     final progress = context.watch<ProgressNotifier>();
-    final pct = ((profile?.overallAccuracy ?? 0.5) * 100).round();
+    final pct = ((profile?.overallAccuracy ?? 0.0) * 100).round();
     final level = profile?.level ?? 1;
 
     return Scaffold(
@@ -84,7 +96,7 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
                       size: const Size(double.infinity, 120),
                       painter: AreaChartPainter(
                         data: progress.accuracyHistory.isEmpty
-                            ? [0.5]
+                            ? [0.0]
                             : progress.accuracyHistory,
                         color: AppColors.primaryBlue,
                       ),
@@ -145,17 +157,17 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
                       style: TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 16),
-                  _skillBar('Phonics',
-                      progress.skillScores['phonics'] ?? 0.5, AppColors.success),
-                  const SizedBox(height: 12),
-                  _skillBar('Vocabulary',
-                      progress.skillScores['vocabulary'] ?? 0.5, AppColors.primaryBlue),
-                  const SizedBox(height: 12),
-                  _skillBar('Comprehension',
-                      progress.skillScores['comprehension'] ?? 0.5, AppColors.purple),
-                  const SizedBox(height: 12),
-                  _skillBar('Fluency',
-                      progress.skillScores['fluency'] ?? 0.5, AppColors.orange),
+                  _skillBar('Phonemic Awareness', 'assets/images/PHONEMIC_AWARENESS.png',
+                      progress.skillScores['phonics'] ?? 0.0, AppColors.success),
+                  const SizedBox(height: 14),
+                  _skillBar('Vocabulary', 'assets/images/VOCABULARY.png',
+                      progress.skillScores['vocabulary'] ?? 0.0, AppColors.primaryBlue),
+                  const SizedBox(height: 14),
+                  _skillBar('Comprehension', 'assets/images/COMPREHENSION.png',
+                      progress.skillScores['comprehension'] ?? 0.0, AppColors.purple),
+                  const SizedBox(height: 14),
+                  _skillBar('Fluency', 'assets/images/FLUENCY.png',
+                      progress.skillScores['fluency'] ?? 0.0, AppColors.orange),
                 ],
               ),
             ),
@@ -184,30 +196,39 @@ class _StudentProgressScreenState extends State<StudentProgressScreen> {
     );
   }
 
-  Widget _skillBar(String name, double value, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _skillBar(String name, String asset, double value, Color color) {
+    return Row(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(name,
-                style:
-                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-            Text('${(value * 100).round()}%',
-                style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w600, color: color)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            value: value,
-            minHeight: 10,
-            backgroundColor: Color.fromRGBO(
-                color.r.toInt(), color.g.toInt(), color.b.toInt(), 0.12),
-            valueColor: AlwaysStoppedAnimation(color),
+        Image.asset(asset, width: 36, height: 36,
+            fit: BoxFit.contain, cacheWidth: 72),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(name,
+                      style:
+                          const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  Text('${(value * 100).round()}%',
+                      style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600, color: color)),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: value,
+                  minHeight: 10,
+                  backgroundColor: Color.fromRGBO(
+                      color.r.toInt(), color.g.toInt(), color.b.toInt(), 0.12),
+                  valueColor: AlwaysStoppedAnimation(color),
+                ),
+              ),
+            ],
           ),
         ),
       ],

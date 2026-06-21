@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:lexiadapt/core/widgets/nature_background.dart';
 import 'package:lexiadapt/core/widgets/lexiadapt_logo.dart';
 import 'package:lexiadapt/core/widgets/top_bar.dart';
+import 'package:lexiadapt/features/auth/screens/role_selection_screen.dart';
+import 'package:lexiadapt/features/student/presentation/notifiers/profile_notifier.dart';
 import 'package:lexiadapt/features/teacher/screens/class_overview_page.dart';
 import 'package:lexiadapt/features/teacher/screens/rewards_manager_screen.dart';
 import 'package:lexiadapt/features/student/screens/student_settings_screen.dart';
@@ -11,6 +14,8 @@ class TeacherHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.watch<ProfileNotifier>().profile;
+    final name = profile?.name ?? 'Teacher';
     return Scaffold(
       body: NatureBackground(
         child: SafeArea(
@@ -21,8 +26,14 @@ class TeacherHomeScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 const TopBar(),
                 const SizedBox(height: 24),
-                const LexiAdaptLogo(height: 48),
-                const SizedBox(height: 40),
+                const LexiAdaptLogo(widthFraction: 0.55),
+                const SizedBox(height: 16),
+                Text('Hi, $name!',
+                    style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1A2E))),
+                const SizedBox(height: 24),
                 _NavButton(
                   title: 'Class Overview',
                   subtitle: 'View class performance',
@@ -56,8 +67,19 @@ class TeacherHomeScreen extends StatelessWidget {
                           builder: (_) => const StudentSettingsScreen())),
                 ),
                 const Spacer(),
-                Text('© LexiAdapt 2026 All Rights Reserved',
-                    style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                TextButton.icon(
+                  onPressed: () {
+                    context.read<ProfileNotifier>().logout();
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const RoleSelectionScreen()),
+                        (_) => false);
+                  },
+                  icon: const Icon(Icons.logout, size: 18, color: Colors.white),
+                  label: const Text('Log out',
+                      style: TextStyle(fontSize: 13, color: Colors.white)),
+                ),
                 const SizedBox(height: 8),
               ],
             ),
@@ -84,53 +106,61 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: colors),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: colors),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+              color: Color.fromRGBO(colors[0].r.toInt(),
+                  colors[0].g.toInt(), colors[0].b.toInt(), 0.35),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-                color: Color.fromRGBO(colors[0].r.toInt(),
-                    colors[0].g.toInt(), colors[0].b.toInt(), 0.35),
-                blurRadius: 10,
-                offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white, size: 28),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white)),
-                  const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: const TextStyle(
-                          fontSize: 12, color: Color(0xCCFFFFFF))),
-                ],
-              ),
+          splashColor: const Color(0x33FFFFFF),
+          highlightColor: const Color(0x1AFFFFFF),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.white, size: 28),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                      const SizedBox(height: 2),
+                      Text(subtitle,
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xCCFFFFFF))),
+                    ],
+                  ),
+                ),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Color(0x40FFFFFF),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(6),
+                    child:
+                        Icon(Icons.chevron_right, color: Colors.white, size: 22),
+                  ),
+                ),
+              ],
             ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                color: Color(0x40FFFFFF),
-                shape: BoxShape.circle,
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(6),
-                child:
-                    Icon(Icons.chevron_right, color: Colors.white, size: 22),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

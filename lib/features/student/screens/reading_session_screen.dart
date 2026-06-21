@@ -343,41 +343,49 @@ class _ReadingSessionScreenState extends State<ReadingSessionScreen> {
     final isIdle = session.state == SessionState.idle;
     final canTap = isIdle || isRecording;
 
-    return GestureDetector(
-      onTap: canTap
-          ? () {
-              if (isIdle) {
-                session.startRecording();
-              } else if (isRecording) {
-                session.stopRecordingAndEvaluate();
-              }
-            }
-          : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        width: isRecording ? 88 : 72,
-        height: isRecording ? 88 : 72,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-              colors: isRecording
-                  ? [const Color(0xFFEF5350), const Color(0xFFC62828)]
-                  : canTap
-                      ? [AppColors.primaryBlue, AppColors.navyBlue]
-                      : [Colors.grey, Colors.grey.shade600]),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-                color: isRecording
-                    ? const Color(0x73EF5350)
-                    : const Color(0x735B9BD5),
-                blurRadius: isRecording ? 24 : 16,
-                offset: const Offset(0, 5)),
-          ],
-        ),
-        child: Icon(
-          isRecording ? Icons.stop_rounded : Icons.mic,
-          color: Colors.white,
-          size: isRecording ? 40 : 34,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      width: isRecording ? 88 : 72,
+      height: isRecording ? 88 : 72,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+            colors: isRecording
+                ? [const Color(0xFFEF5350), const Color(0xFFC62828)]
+                : canTap
+                    ? [AppColors.primaryBlue, AppColors.navyBlue]
+                    : [Colors.grey, Colors.grey.shade600]),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+              color: isRecording
+                  ? const Color(0x73EF5350)
+                  : const Color(0x735B9BD5),
+              blurRadius: isRecording ? 24 : 16,
+              offset: const Offset(0, 5)),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: canTap
+              ? () {
+                  if (isIdle) {
+                    session.startRecording();
+                  } else if (isRecording) {
+                    session.stopRecordingAndEvaluate();
+                  }
+                }
+              : null,
+          customBorder: const CircleBorder(),
+          splashColor: const Color(0x33FFFFFF),
+          child: Center(
+            child: Icon(
+              isRecording ? Icons.stop_rounded : Icons.mic,
+              color: Colors.white,
+              size: isRecording ? 40 : 34,
+            ),
+          ),
         ),
       ),
     );

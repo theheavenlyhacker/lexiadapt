@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:lexiadapt/core/theme/app_colors.dart';
 import 'package:lexiadapt/core/widgets/section_header.dart';
+import 'package:lexiadapt/features/auth/screens/role_selection_screen.dart';
+import 'package:lexiadapt/features/student/presentation/notifiers/profile_notifier.dart';
 
 class StudentSettingsScreen extends StatefulWidget {
   const StudentSettingsScreen({super.key});
@@ -162,6 +165,31 @@ class _StudentSettingsScreenState extends State<StudentSettingsScreen> {
                     ],
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  context.read<ProfileNotifier>().logout();
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const RoleSelectionScreen()),
+                      (_) => false);
+                },
+                icon: const Icon(Icons.logout, size: 20),
+                label: const Text('Log Out',
+                    style:
+                        TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFEF5350),
+                  side: const BorderSide(color: Color(0xFFEF5350)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
               ),
             ),
             const SizedBox(height: 32),

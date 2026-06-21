@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:lexiadapt/core/theme/app_colors.dart';
 import 'package:lexiadapt/core/widgets/nature_background.dart';
 import 'package:lexiadapt/core/widgets/lexiadapt_logo.dart';
 import 'package:lexiadapt/core/widgets/top_bar.dart';
+import 'package:lexiadapt/features/auth/screens/role_selection_screen.dart';
+import 'package:lexiadapt/features/student/presentation/notifiers/profile_notifier.dart';
 import 'package:lexiadapt/features/student/screens/category_screen.dart';
 import 'package:lexiadapt/features/student/screens/student_progress_screen.dart';
 import 'package:lexiadapt/features/student/screens/student_rewards_screen.dart';
 import 'package:lexiadapt/features/student/screens/student_settings_screen.dart';
-import 'package:lexiadapt/features/student/screens/record_debug_screen.dart';
 import 'package:lexiadapt/features/student/widgets/home_button.dart';
 
 class StudentHomeScreen extends StatelessWidget {
@@ -15,6 +17,8 @@ class StudentHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.watch<ProfileNotifier>().profile;
+    final name = profile?.name ?? 'Student';
     return Scaffold(
       body: NatureBackground(
         child: SafeArea(
@@ -25,8 +29,14 @@ class StudentHomeScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 const TopBar(),
                 const SizedBox(height: 24),
-                const LexiAdaptLogo(height: 48),
-                const SizedBox(height: 40),
+                const LexiAdaptLogo(widthFraction: 0.55),
+                const SizedBox(height: 16),
+                Text('Hi, $name!',
+                    style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark)),
+                const SizedBox(height: 24),
                 HomeButton(
                   label: 'Continue Reading',
                   icon: Icons.menu_book_rounded,
@@ -66,17 +76,21 @@ class StudentHomeScreen extends StatelessWidget {
                       MaterialPageRoute(
                           builder: (_) => const StudentSettingsScreen())),
                 ),
-                const SizedBox(height: 12),
-                HomeButton(
-                  label: 'Debug Recording',
-                  icon: Icons.bug_report,
-                  colors: const [Color(0xFFEF5350), Color(0xFFC62828)],
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const RecordDebugScreen())),
-                ),
                 const Spacer(),
+                TextButton.icon(
+                  onPressed: () {
+                    context.read<ProfileNotifier>().logout();
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const RoleSelectionScreen()),
+                        (_) => false);
+                  },
+                  icon: const Icon(Icons.logout, size: 18, color: Colors.white),
+                  label: const Text('Log out',
+                      style: TextStyle(fontSize: 13, color: Colors.white)),
+                ),
+                const SizedBox(height: 8),
               ],
             ),
           ),

@@ -7,23 +7,26 @@ class NatureBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final cacheW = (size.width * dpr).round().clamp(360, 1080);
     return Stack(
       children: [
-        Container(
-          width: size.width,
-          height: size.height,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.skyTop,
-                AppColors.skyMidTop,
-                AppColors.skyMidBottom,
-                Color(0xFFFFFFFF),
-              ],
-              stops: [0.0, 0.2, 0.4, 0.6],
+        SizedBox.expand(
+          child: const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.skyTop,
+                  AppColors.skyMidTop,
+                  AppColors.skyMidBottom,
+                  Color(0xFFD4EFFC),
+                  Color(0xFFFFFFFF),
+                ],
+                stops: [0.0, 0.2, 0.45, 0.65, 0.85],
+              ),
             ),
           ),
         ),
@@ -37,7 +40,7 @@ class NatureBackground extends StatelessWidget {
             height: size.height,
             fit: BoxFit.cover,
             alignment: Alignment.bottomCenter,
-            cacheWidth: 720,
+            cacheWidth: cacheW,
           ),
         ),
         child,

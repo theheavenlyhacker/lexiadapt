@@ -4,7 +4,7 @@ class Achievement {
   final String badgeId;
   final String title;
   final String description;
-  final IconData icon;
+  final String asset;
   final Color color;
   bool isEarned;
   DateTime? earnedAt;
@@ -13,7 +13,7 @@ class Achievement {
     required this.badgeId,
     required this.title,
     required this.description,
-    required this.icon,
+    required this.asset,
     required this.color,
     this.isEarned = false,
     this.earnedAt,
@@ -21,39 +21,46 @@ class Achievement {
 
   static List<Achievement> allAchievements() => [
         Achievement(
-          badgeId: 'bookworm',
-          title: 'Bookworm',
-          description: 'Read 10 stories',
-          icon: Icons.menu_book,
-          color: const Color(0xFF5B9BD5),
-        ),
-        Achievement(
           badgeId: 'voice_star',
-          title: 'Voice Star',
+          title: 'First Steps',
           description: 'Complete 5 read-aloud sessions',
-          icon: Icons.mic,
+          asset: 'assets/images/BADGE_FIRSTSTEP.png',
           color: const Color(0xFF66BB6A),
         ),
         Achievement(
-          badgeId: 'rising_reader',
-          title: 'Rising Reader',
-          description: 'Improve accuracy by 10%',
-          icon: Icons.trending_up,
-          color: const Color(0xFF9B59B6),
+          badgeId: 'bookworm',
+          title: 'Good Listener',
+          description: 'Read 10 stories',
+          asset: 'assets/images/BADGE_GOOD_LISTENER.png',
+          color: const Color(0xFF5B9BD5),
         ),
         Achievement(
-          badgeId: 'streak_7',
-          title: '7-Day Streak',
-          description: 'Read every day for a week',
-          icon: Icons.local_fire_department,
-          color: const Color(0xFFFF7043),
+          badgeId: 'rising_reader',
+          title: 'Star Reader',
+          description: 'Reach 85% accuracy',
+          asset: 'assets/images/BADGE_STAR_READER.png',
+          color: const Color(0xFFFFB300),
         ),
         Achievement(
           badgeId: 'perfect',
-          title: 'Perfect Score',
-          description: 'Get 100% accuracy on a story',
-          icon: Icons.diamond,
-          color: const Color(0xFFFFB300),
+          title: 'Word Explorer',
+          description: 'Learn 50 words',
+          asset: 'assets/images/BADGE_WORD_EXPLORER.png',
+          color: const Color(0xFF4CAF50),
+        ),
+        Achievement(
+          badgeId: 'story_master',
+          title: 'Story Master',
+          description: 'Finish 20 stories',
+          asset: 'assets/images/BADGE_STORY_MASTER.png',
+          color: const Color(0xFF42A5F5),
+        ),
+        Achievement(
+          badgeId: 'streak_7',
+          title: 'Consistent Learner',
+          description: 'Read every day for a week',
+          asset: 'assets/images/BADGE_CONSISTENT_LEARNER.png',
+          color: const Color(0xFFFF7043),
         ),
       ];
 }

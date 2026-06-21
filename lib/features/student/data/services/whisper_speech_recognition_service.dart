@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
@@ -13,11 +14,11 @@ class WhisperSpeechRecognitionService implements SpeechRecognitionService {
   DateTime? _recordingStartTime;
 
   static const _baseUrl =
-      'https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny/resolve/main';
+      'https://huggingface.co/csukuangfj/sherpa-onnx-whisper-base/resolve/main';
   static const _modelFiles = [
-    'tiny-encoder.int8.onnx',
-    'tiny-decoder.int8.onnx',
-    'tiny-tokens.txt',
+    'base-encoder.int8.onnx',
+    'base-decoder.int8.onnx',
+    'base-tokens.txt',
   ];
 
   bool get isReady => _initialized;
@@ -32,7 +33,7 @@ class WhisperSpeechRecognitionService implements SpeechRecognitionService {
 
   Future<String> get _modelDir async {
     final appDir = await getApplicationSupportDirectory();
-    return '${appDir.path}/whisper_model';
+    return '${appDir.path}/whisper_model_base';
   }
 
   Future<void> initialize() async {
@@ -43,14 +44,14 @@ class WhisperSpeechRecognitionService implements SpeechRecognitionService {
       final dir = await _modelDir;
       await Directory(dir).create(recursive: true);
 
-      final encoderPath = '$dir/tiny-encoder.int8.onnx';
-      final decoderPath = '$dir/tiny-decoder.int8.onnx';
-      final tokensPath = '$dir/tiny-tokens.txt';
+      final encoderPath = '$dir/base-encoder.int8.onnx';
+      final decoderPath = '$dir/base-decoder.int8.onnx';
+      final tokensPath = '$dir/base-tokens.txt';
 
       const minSizes = {
-        'tiny-encoder.int8.onnx': 10000000,
-        'tiny-decoder.int8.onnx': 80000000,
-        'tiny-tokens.txt': 500000,
+        'base-encoder.int8.onnx': 20000000,
+        'base-decoder.int8.onnx': 100000000,
+        'base-tokens.txt': 500000,
       };
 
       for (final modelFile in _modelFiles) {
@@ -97,7 +98,7 @@ class WhisperSpeechRecognitionService implements SpeechRecognitionService {
       _recognizer = sherpa.OfflineRecognizer(config);
       _initialized = true;
       _initializing = false;
-      debugPrint('[Whisper] Model loaded — ready for on-device inference');
+      debugPrint('[Whisper] Base model loaded — ready for on-device inference');
     } catch (e) {
       _initializing = false;
       debugPrint('[Whisper] Initialization failed: $e');
@@ -192,41 +193,43 @@ class WhisperSpeechRecognitionService implements SpeechRecognitionService {
     debugPrint('[Whisper] Expected words: $expectedWords');
     debugPrint('[Whisper] Spoken words:   $spokenWords');
 
-    int correct = 0;
+    final aligned = _alignWords(expectedWords, spokenWords);
+    double score = 0;
     final troubleWords = <TroubleWord>[];
 
-    // Use a more forgiving comparison — allow partial matches
-    for (int i = 0; i < expectedWords.length; i++) {
-      final exp = expectedWords[i];
-      String spk = '';
+    for (final pair in aligned) {
+      final exp = pair.$1;
+      final spk = pair.$2;
 
-      if (i < spokenWords.length) {
-        spk = spokenWords[i];
+      if (exp == null) continue;
+
+      if (spk == null || spk.isEmpty) {
+        troubleWords.add(TroubleWord(expected: exp, spoken: '(skipped)'));
+        continue;
       }
 
       if (exp == spk) {
-        correct++;
-      } else if (spk.isNotEmpty && (exp.contains(spk) || spk.contains(exp))) {
-        // Partial match — count as half correct
-        correct++;
-        debugPrint('[Whisper] Partial match: "$exp" ~ "$spk"');
+        score += 1.0;
       } else {
-        troubleWords.add(TroubleWord(
-            expected: exp, spoken: spk.isEmpty ? '(missing)' : spk));
+        final sim = _similarity(exp, spk);
+        if (sim >= 0.7) {
+          score += sim;
+        } else {
+          troubleWords.add(TroubleWord(expected: exp, spoken: spk));
+        }
       }
     }
 
     final accuracy =
-        expectedWords.isEmpty ? 0.0 : correct / expectedWords.length;
+        expectedWords.isEmpty ? 0.0 : (score / expectedWords.length).clamp(0.0, 1.0);
     final wpm = audioDurationSec > 0.5
         ? (spokenWords.length / audioDurationSec) * 60
         : 0.0;
 
     debugPrint('[Whisper] Accuracy: ${(accuracy * 100).round()}% '
-        '($correct/${expectedWords.length})');
+        '(score ${score.toStringAsFixed(1)}/${expectedWords.length})');
     debugPrint('[Whisper] WPM: ${wpm.round()} '
         '(${spokenWords.length} words / ${audioDurationSec.toStringAsFixed(1)}s)');
-    debugPrint('[Whisper] Trouble words: ${troubleWords.map((t) => "${t.expected}->${t.spoken}").join(", ")}');
 
     return ReadingResult(
       storyText: expected,
@@ -239,11 +242,85 @@ class WhisperSpeechRecognitionService implements SpeechRecognitionService {
     );
   }
 
+  /// Align expected and spoken word lists using longest common subsequence
+  /// so insertions/deletions don't cascade all subsequent words into mismatches.
+  List<(String?, String?)> _alignWords(List<String> expected, List<String> spoken) {
+    final n = expected.length;
+    final m = spoken.length;
+    // LCS table
+    final dp = List.generate(n + 1, (_) => List.filled(m + 1, 0));
+    for (int i = 1; i <= n; i++) {
+      for (int j = 1; j <= m; j++) {
+        if (expected[i - 1] == spoken[j - 1] ||
+            _similarity(expected[i - 1], spoken[j - 1]) >= 0.7) {
+          dp[i][j] = dp[i - 1][j - 1] + 1;
+        } else {
+          dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+    }
+
+    // Backtrack to produce alignment
+    final result = <(String?, String?)>[];
+    int i = n, j = m;
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 &&
+          (expected[i - 1] == spoken[j - 1] ||
+              _similarity(expected[i - 1], spoken[j - 1]) >= 0.7)) {
+        result.add((expected[i - 1], spoken[j - 1]));
+        i--;
+        j--;
+      } else if (j > 0 && (i == 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+        result.add((null, spoken[j - 1]));
+        j--;
+      } else {
+        result.add((expected[i - 1], null));
+        i--;
+      }
+    }
+    return result.reversed.toList();
+  }
+
+  /// Levenshtein-based similarity: 1.0 = identical, 0.0 = completely different.
+  double _similarity(String a, String b) {
+    if (a == b) return 1.0;
+    if (a.isEmpty || b.isEmpty) return 0.0;
+    final n = a.length, m = b.length;
+    var prev = List.generate(m + 1, (j) => j);
+    var curr = List.filled(m + 1, 0);
+    for (int i = 1; i <= n; i++) {
+      curr[0] = i;
+      for (int j = 1; j <= m; j++) {
+        curr[j] = a[i - 1] == b[j - 1]
+            ? prev[j - 1]
+            : 1 + [prev[j - 1], prev[j], curr[j - 1]].reduce(min);
+      }
+      final tmp = prev;
+      prev = curr;
+      curr = tmp;
+    }
+    return 1.0 - prev[m] / max(n, m);
+  }
+
+  static final _contractions = {
+    "dont": "don't", "doesnt": "doesn't", "didnt": "didn't",
+    "cant": "can't", "wont": "won't", "isnt": "isn't",
+    "arent": "aren't", "wasnt": "wasn't", "werent": "weren't",
+    "im": "i'm", "ive": "i've", "ill": "i'll",
+    "youre": "you're", "youve": "you've", "youll": "you'll",
+    "hes": "he's", "shes": "she's", "its": "it's",
+    "thats": "that's", "theres": "there's", "theyre": "they're",
+    "weve": "we've", "were": "we're", "theyll": "they'll",
+  };
+
   List<String> _tokenize(String text) => text
       .toLowerCase()
+      .replaceAll(RegExp(r"[''']"), '')
       .split(RegExp(r'\s+'))
       .map((w) => w.replaceAll(RegExp(r'[^\w]'), ''))
       .where((w) => w.isNotEmpty)
+      .map((w) => _contractions[w] ?? w)
+      .map((w) => w.replaceAll("'", ''))
       .toList();
 
   ReadingResult _emptyResult(String expected) => ReadingResult(

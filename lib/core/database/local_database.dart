@@ -14,8 +14,9 @@ class LocalDatabase {
     final dbPath = await getDatabasesPath();
     _database = await openDatabase(
       '$dbPath/lexiadapt.db',
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
     return _database!;
   }
@@ -24,22 +25,34 @@ class LocalDatabase {
     final batch = db.batch();
 
     batch.execute('''
+      CREATE TABLE ${DbTables.userAccount} (
+        id TEXT PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        display_name TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'student',
+        created_at INTEGER NOT NULL
+      )
+    ''');
+
+    batch.execute('''
       CREATE TABLE ${DbTables.learner} (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         grade INTEGER NOT NULL DEFAULT 2,
         language TEXT DEFAULT 'en',
-        overall_accuracy REAL DEFAULT 0.5,
-        phonics_score REAL DEFAULT 0.5,
-        vocabulary_score REAL DEFAULT 0.5,
-        comprehension_score REAL DEFAULT 0.5,
-        fluency_wpm REAL DEFAULT 60,
+        overall_accuracy REAL DEFAULT 0.0,
+        phonics_score REAL DEFAULT 0.0,
+        vocabulary_score REAL DEFAULT 0.0,
+        comprehension_score REAL DEFAULT 0.0,
+        fluency_wpm REAL DEFAULT 0,
         current_difficulty REAL DEFAULT 0.3,
         consecutive_successes INTEGER DEFAULT 0,
         consecutive_failures INTEGER DEFAULT 0,
         level INTEGER DEFAULT 1,
         total_sessions INTEGER DEFAULT 0,
         day_streak INTEGER DEFAULT 0,
+        last_session_date TEXT,
         created_at INTEGER NOT NULL
       )
     ''');
@@ -92,6 +105,26 @@ class LocalDatabase {
     ''');
 
     await batch.commit(noResult: true);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ${DbTables.userAccount} (
+          id TEXT PRIMARY KEY,
+          username TEXT NOT NULL UNIQUE,
+          display_name TEXT NOT NULL,
+          password_hash TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'student',
+          created_at INTEGER NOT NULL
+        )
+      ''');
+      // Add last_session_date column for streak tracking
+      try {
+        await db.execute(
+            'ALTER TABLE ${DbTables.learner} ADD COLUMN last_session_date TEXT');
+      } catch (_) {}
+    }
   }
 
   Future<void> close() async {

@@ -11,7 +11,9 @@
       "Bash(flutter build *)",
       "Bash(rtk ping *)",
       "Bash(rtk read *)",
-      "Bash(rtk wc *)"
+      "Bash(rtk wc *)",
+      "Bash(flutter pub *)",
+      "Bash(identify -format '%wx%h' /home/jai/Github/lexiadapt/assets/images/logo.png)"
     ]
   }
 }

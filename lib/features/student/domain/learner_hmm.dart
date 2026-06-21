@@ -61,10 +61,10 @@ class LearnerHMM {
   Map<String, double> getSkillScores() {
     if (_wordBeliefs.isEmpty) {
       return {
-        'phonics': 0.5,
-        'vocabulary': 0.5,
-        'comprehension': 0.5,
-        'fluency': 0.5,
+        'phonics': 0.0,
+        'vocabulary': 0.0,
+        'comprehension': 0.0,
+        'fluency': 0.0,
       };
     }
 
